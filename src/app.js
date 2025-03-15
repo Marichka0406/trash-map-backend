@@ -1,13 +1,26 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
-
-dotenv.config();
-
+const userRoutes = require('./routes/userRoutes');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const app = express();
 
+dotenv.config(); // Load environment variables
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json()); // Parse incoming JSON requests
+
+// Connect to the database
 connectDB();
 
-app.use(express.json()); 
+// Routes
+app.use('/api/users', userRoutes); 
 
-module.exports = app;
+// Default route (for testing)
+app.get('/', (req, res) => {
+  res.send('Server is running');
+});
+
+module.exports = app; 
