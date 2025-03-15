@@ -15,7 +15,7 @@ const trashMarkSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    required: false,
   },
   photoUrl: {
     type: String,
@@ -24,7 +24,7 @@ const trashMarkSchema = new mongoose.Schema({
   amount: {
     type: String,
     enum: ['little', 'medium', 'many'],
-    required: true,
+    required: false,
   },
   status: {
     type: String,
