@@ -2,10 +2,10 @@ const UserService = require('../services/userService');
 
 // Register user
 const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { fullName, email, password } = req.body;
 
   try {
-    const { user, token } = await UserService.registerUser({ username, email, password });
+    const { user, token } = await UserService.registerUser({ fullName, email, password });
     res.status(201).json({ token, user });
   } catch (err) {
     res.status(500).json({ message: err.message });

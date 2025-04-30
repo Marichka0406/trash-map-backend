@@ -1,61 +1,119 @@
-const TrashMark = require("../models/trashMarkModel");
-const { isAdminOrOwner } = require("../utils/permissionUtils");
+const TrashMark = require('../models/trashMarkModel');
 
-// Create a new trash mark
-const createTrashMark = async (data) => {
-  const trashMark = new TrashMark(data);
-  await trashMark.save();
-  return trashMark;
-};
-
-// Get all trash marks
 const getAllTrashMarks = async () => {
-  return await TrashMark.find();
+  return TrashMark.find().populate('createdBy updatedBy trashMarkHistory.updatedBy');
 };
 
-// Get a single trash mark by ID
 const getTrashMarkById = async (id) => {
-  const trashMark = await TrashMark.findById(id);
-  if (!trashMark) throw new Error("Trash Mark not found");
+  const trashMark = await TrashMark.findById(id).populate('createdBy updatedBy trashMarkHistory.updatedBy');
+  if (!trashMark) throw new Error('Trash mark not found');
   return trashMark;
 };
 
-// Update a trash mark (admin or owner can edit)
-const updateTrashMark = async (id, updateData, userId, userRole) => {
-  const trashMark = await TrashMark.findById(id);
-  if (!trashMark) throw new Error("Trash Mark not found");
+const createTrashMark = async (data, userId) => {
+  const {
+    description,
+    location,
+    status,
+    photos,
+  } = data;
 
-  if (!isAdminOrOwner(userRole, userId, trashMark)) {
-    throw new Error(
-      "You can only edit your own trash mark or if you are an admin"
-    );
+  if (!photos || photos.length === 0) {
+    throw new Error('Photos are required');
   }
 
-  const updatedTrashMark = await TrashMark.findByIdAndUpdate(id, updateData, {
-    new: true,
+  return TrashMark.create({
+    description,
+    location,
+    status,
+    photos,
+    createdBy: userId,
+    updatedBy: userId,
+    trashMarkHistory: [{
+      updatedBy: userId,
+      status,
+      description,
+      photos,
+    }],
   });
-  return updatedTrashMark;
 };
 
-// Delete a trash mark (admin or owner can delete)
-const deleteTrashMark = async (id, userId, userRole) => {
+const updateTrashMarkMetadata = async (id, data, userId) => {
   const trashMark = await TrashMark.findById(id);
-  if (!trashMark) throw new Error("Trash Mark not found");
+  if (!trashMark) throw new Error('Trash mark not found');
 
-  if (!isAdminOrOwner(userRole, userId, trashMark)) {
-    throw new Error(
-      "You can only delete your own trash mark or if you are an admin"
-    );
+  const { description, photos } = data;
+
+  if (!description && !photos) {
+    throw new Error('Nothing to update');
+  }
+
+  if (trashMark.updatedBy.toString() !== userId) {
+    throw new Error('Only the last updater can edit description or photos');
+  }
+
+  if (photos && photos.length === 0) {
+    throw new Error('Photos array cannot be empty');
+  }
+
+  if (description) trashMark.description = description;
+  if (photos) trashMark.photos = photos;
+
+  const lastEntry = trashMark.trashMarkHistory[trashMark.trashMarkHistory.length - 1];
+  if (lastEntry && lastEntry.updatedBy.toString() === userId) {
+    if (description) lastEntry.description = description;
+    if (photos) lastEntry.photos = photos;
+  }
+
+  return trashMark.save();
+};
+
+const updateTrashMarkStatus = async (id, data, userId) => {
+  const trashMark = await TrashMark.findById(id);
+  if (!trashMark) throw new Error('Trash mark not found');
+
+  const { status, description, photos } = data;
+
+  if (!status || !description || !photos || photos.length === 0) {
+    throw new Error('Status, description and non-empty photos are required');
+  }
+
+  const historyEntry = {
+    updatedBy: userId,
+    status,
+    description,
+    photos,
+    updatedAt: new Date()
+  };
+
+  trashMark.trashMarkHistory.push(historyEntry);
+
+  trashMark.status = status;
+  trashMark.description = description;
+  trashMark.photos = photos;
+  trashMark.updatedBy = userId;
+  trashMark.lastStatusUpdateAt = updatedAt;
+
+  return trashMark.save();
+};
+
+
+const deleteTrashMark = async (id, userId) => {
+  const trashMark = await TrashMark.findById(id);
+  if (!trashMark) throw new Error('Trash mark not found');
+
+  if (trashMark.createdBy.toString() !== userId) {
+    throw new Error('Only the creator can delete this trash mark');
   }
 
   await TrashMark.findByIdAndDelete(id);
-  return { message: "Trash mark deleted" };
 };
 
 module.exports = {
-  createTrashMark,
   getAllTrashMarks,
   getTrashMarkById,
-  updateTrashMark,
+  createTrashMark,
+  updateTrashMarkMetadata,
+  updateTrashMarkStatus,
   deleteTrashMark,
 };

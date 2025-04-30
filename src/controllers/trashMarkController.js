@@ -1,66 +1,68 @@
-const trashMarkService = require("../services/trashMarkService");
+const trashMarkService = require('../services/trashMarkService');
 
-// Create a new trash mark
-const createTrashMark = async (req, res) => {
-  try {
-    const data = { ...req.body, userId: req.user.userId };
-    const trashMark = await trashMarkService.createTrashMark(data);
-    res.status(201).json(trashMark);
-  } catch (error) {
-    res.status(500).json({ message: error.message }); 
-  }
-};
-
-// Get all trash marks
 const getAllTrashMarks = async (req, res) => {
   try {
-    const trashMarks = await trashMarkService.getAllTrashMarks();
-    res.status(200).json(trashMarks);
+    const data = await trashMarkService.getAllTrashMarks();
+    res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching trash marks', error: error.message }); 
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Get a single trash mark by ID
 const getTrashMarkById = async (req, res) => {
   try {
-    const trashMark = await trashMarkService.getTrashMarkById(req.params.id);
-    if (!trashMark) {
-        return res.status(404).json({ message: 'Trash mark not found' });
-    }
-    res.status(200).json(trashMark);
+    const data = await trashMarkService.getTrashMarkById(req.params.id);
+    res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching trash mark', error: error.message }); 
+    res.status(404).json({ message: error.message });
   }
 };
 
-// Update a trash mark
-const updateTrashMark = async (req, res) => {
+const createTrashMark = async (req, res) => {
   try {
-    const trashMark = await trashMarkService.updateTrashMark(
-      req.params.id,
-      req.body
-    );
-    res.status(200).json(trashMark);
+    const trashMark = await trashMarkService.createTrashMark(req.body, req.user.userId);
+    res.status(201).json(trashMark);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating trash marks', error: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-// Delete a trash mark
+const updateTrashMarkStatus = async (req, res) => {
+  try {
+    const updated = await trashMarkService.updateTrashMarkStatus(
+      req.params.id,
+      req.body,
+      req.user.id
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+const updateTrashMarkMetadata = async (req, res) => {
+  try {
+    const updated = await updateTrashMarkMetadata(req.params.id, req.body, req.user.id);
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 const deleteTrashMark = async (req, res) => {
   try {
-    await trashMarkService.deleteTrashMark(req.params.id);
-    res.status(200).json({ message: "Trash mark deleted" });
+    await trashMarkService.deleteTrashMark(req.params.id, req.user.userId);
+    res.status(200).json({ message: 'Trash mark deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting trash mark', error: error.message }); 
+    res.status(403).json({ message: error.message });
   }
 };
 
 module.exports = {
-  createTrashMark,
   getAllTrashMarks,
   getTrashMarkById,
-  updateTrashMark,
+  createTrashMark,
+  updateTrashMarkStatus,
+  updateTrashMarkMetadata,
   deleteTrashMark,
 };
