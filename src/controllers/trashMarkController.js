@@ -2,12 +2,15 @@ const trashMarkService = require('../services/trashMarkService');
 
 const getAllTrashMarks = async (req, res) => {
   try {
-    const data = await trashMarkService.getAllTrashMarks();
+    const role = req.user?.role || 'guest'; 
+    const data = await trashMarkService.getAllTrashMarks(role);
     res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 const getTrashMarkById = async (req, res) => {
   try {

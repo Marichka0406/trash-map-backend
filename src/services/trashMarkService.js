@@ -1,7 +1,11 @@
 const TrashMark = require('../models/trashMarkModel');
 
-const getAllTrashMarks = async () => {
-  return TrashMark.find().populate('createdBy updatedBy trashMarkHistory.updatedBy');
+const getAllTrashMarks = async (userRole) => {
+  if (userRole === 'user' || userRole === 'guest') {
+    return await TrashMark.find({}, 'status location');
+  }
+
+  return await TrashMark.find();
 };
 
 const getTrashMarkById = async (id) => {
