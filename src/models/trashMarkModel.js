@@ -31,9 +31,6 @@ const trashMarkSchema = new mongoose.Schema(
       required: true,
     },
     trashMarkHistory: [trashMarkHistorySchema],
-    lastStatusUpdateAt: {
-      type: Date,
-    },
   },
   { timestamps: true }
 );

@@ -26,7 +26,7 @@ const createTrashMark = async (data, userId) => {
     throw new Error('Photos are required');
   }
 
-  return TrashMark.create({
+  const createdMark = await TrashMark.create({
     description,
     location,
     status,
@@ -40,7 +40,14 @@ const createTrashMark = async (data, userId) => {
       photos,
     }],
   });
+
+  return {
+    _id: createdMark._id,
+    status: createdMark.status,
+    location: createdMark.location,
+  };
 };
+
 
 const updateTrashMarkMetadata = async (id, data, userId) => {
   const trashMark = await TrashMark.findById(id);
@@ -96,7 +103,6 @@ const updateTrashMarkStatus = async (id, data, userId) => {
   trashMark.description = description;
   trashMark.photos = photos;
   trashMark.updatedBy = userId;
-  trashMark.lastStatusUpdateAt = updatedAt;
 
   return trashMark.save();
 };
